@@ -4,9 +4,24 @@ const {
 } = require("../helper-hardhat-config");
 const { ethers, network } = require("hardhat");
 const { verify } = require("../utils/verify");
-const { storeImages } = require("../utils/uploadToPinata");
+const {
+  storeImages,
+  storeTokenUriMetadata,
+} = require("../utils/uploadToPinata");
 
 const imagesLocation = "./images/randomNft/";
+
+const metaDataTemplate = {
+  name: "",
+  description: "",
+  image: "",
+  attributes: [
+    {
+      trait_types: "Cuteness",
+      value: 100,
+    },
+  ],
+};
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
   const { deploy, log } = deployments;
@@ -37,7 +52,6 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     tokenUris = await handleTokenUris();
   }
 
-  await storeImages(imagesLocation);
   // const args = [
   //   vrfCoordinatorV2address,
   //   networkConfig[chainId].gasLane,
@@ -57,6 +71,32 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
 async function handleTokenUris() {
   tokenUris = [];
+  //store the image in ipfs
+  //store the metadata in ipfs
+
+  const { responses: imageUploadResponses, files } = await storeImages(
+    imagesLocation
+  );
+
+  for (imageUploadResponseIndex in imageUploadResponses) {
+    //create metadata
+    //upload metadata
+    let tokenUriMetadata = { ...metaDataTemplate };
+
+    tokenUriMetadata.name = files[imageUploadResponseIndex].replace(".png", "");
+    tokenUriMetadata.description = `An adorable ${tokenUriMetadata.name} pup!`;
+    tokenUriMetadata.image = `ipfs://${imageUploadResponses[imageUploadResponseIndex].IpfsHash}`;
+
+    console.log(`Uploading ${tokenUriMetadata.name}...`);
+    //store the json to pinata/ipfs
+    const metadataUploadResponse = await storeTokenUriMetadata(
+      tokenUriMetadata
+    );
+
+    tokenUris.push(`ipfs://${metadataUploadResponse.IpfsHash}`);
+  }
+  console.log("TokenUris uploaded:");
+  console.log(tokenUris);
   return tokenUris;
 }
 
