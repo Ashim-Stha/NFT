@@ -4,6 +4,9 @@ const {
 } = require("../helper-hardhat-config");
 const { ethers, network } = require("hardhat");
 const { verify } = require("../utils/verify");
+const { storeImages } = require("../utils/uploadToPinata");
+
+const imagesLocation = "./images/randomNft/";
 
 module.exports = async function ({ getNamedAccounts, deployments }) {
   const { deploy, log } = deployments;
@@ -28,19 +31,33 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
 
   log("-------------------------");
 
-  const args = [
-    vrfCoordinatorV2address,
-    networkConfig[chainId].gasLane,
-    subscriptionId,
-    networkConfig[chainId].callbackGasLimit,
-    ,
-    networkConfig[chainId].mintFee,
-  ];
+  //get the ipfs hashes of our images
+  let tokenUris;
+  if (process.env.UPLOAD_TO_PINATA == "true") {
+    tokenUris = await handleTokenUris();
+  }
 
-  const randomIpfsNft = await deploy("RandomIpfsNft", {
-    from: deployer,
-    args: args,
-    log: true,
-    waitConfirmations: network.config.blockConfirmations || 1,
-  });
+  await storeImages(imagesLocation);
+  // const args = [
+  //   vrfCoordinatorV2address,
+  //   networkConfig[chainId].gasLane,
+  //   subscriptionId,
+  //   networkConfig[chainId].callbackGasLimit,
+  //   ,
+  //   networkConfig[chainId].mintFee,
+  // ];
+
+  // const randomIpfsNft = await deploy("RandomIpfsNft", {
+  //   from: deployer,
+  //   args: args,
+  //   log: true,
+  //   waitConfirmations: network.config.blockConfirmations || 1,
+  // });
 };
+
+async function handleTokenUris() {
+  tokenUris = [];
+  return tokenUris;
+}
+
+module.exports.tags = ["all", "randomipfs", "main"];
