@@ -9,6 +9,7 @@ const {
   storeTokenUriMetadata,
 } = require("../utils/uploadToPinata");
 
+const FUND_AMOUNT = "1000000000000000000000";
 const imagesLocation = "./images/randomNft/";
 
 const metaDataTemplate = {
@@ -39,6 +40,8 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     const tx = await vrfCoordinatorV2Mock.createSubscription();
     const txReceipt = await tx.wait(1);
     subscriptionId = txReceipt.events[0].args.subId;
+
+    await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, FUND_AMOUNT);
   } else {
     vrfCoordinatorV2address = networkConfig[chainId].vrfCoordinatorV2;
     subscriptionId = networkConfig[chainId].subscriptionId;
@@ -52,21 +55,33 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
     tokenUris = await handleTokenUris();
   }
 
-  // const args = [
-  //   vrfCoordinatorV2address,
-  //   networkConfig[chainId].gasLane,
-  //   subscriptionId,
-  //   networkConfig[chainId].callbackGasLimit,
-  //   ,
-  //   networkConfig[chainId].mintFee,
-  // ];
+  //once we got tokenUris ,no need to run handleTokenUris();so we make UPLOAD_TO_PINATA false
+  tokenUris = [
+    "ipfs://QmWftbwkJZHAA1mVBxJ1Gn3EPzGc8qvcWz5V7ZHpGcroM6",
+    "ipfs://QmSdKZHnStsM6g2QmX6x1qC1mjGjPhaw61CzUx4B3EwRsw",
+    "ipfs://QmQ1qRt7GWNq1tHVmyir3FJqfjPjdT2EbyYs4VNUbKg541",
+  ];
 
-  // const randomIpfsNft = await deploy("RandomIpfsNft", {
-  //   from: deployer,
-  //   args: args,
-  //   log: true,
-  //   waitConfirmations: network.config.blockConfirmations || 1,
-  // });
+  const args = [
+    vrfCoordinatorV2address,
+    networkConfig[chainId].gasLane,
+    subscriptionId,
+    networkConfig[chainId].callbackGasLimit,
+    tokenUris,
+    networkConfig[chainId].mintFee,
+  ];
+
+  const randomIpfsNft = await deploy("RandomIpfsNft", {
+    from: deployer,
+    args: args,
+    log: true,
+    waitConfirmations: network.config.blockConfirmations || 1,
+  });
+
+  if (!developmentChains.includes(network.name)) {
+    console.log("Verifying...");
+    await verify(randomIpfsNft.address, args);
+  }
 };
 
 async function handleTokenUris() {
