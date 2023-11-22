@@ -53,3 +53,5 @@ module.exports = async function ({ getNamedAccounts }) {
     `Dynamic svg NFT index 0 tokenURI: ${await dynamicSvgNft.tokenURI(0)}`
   );
 };
+
+module.exports.tags = ["all", "mint"];
