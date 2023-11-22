@@ -1,4 +1,8 @@
+const { ethers } = require("hardhat");
 const { developmentChains } = require("../helper-hardhat-config");
+
+const DECIMALS = "18";
+const INITIAL_PRICE = ethers.utils.parseUnits("2000", "ether");
 
 module.exports = async function (hre) {
   const { getNamedAccounts, deployments, ethers, network } = hre;
@@ -15,6 +19,12 @@ module.exports = async function (hre) {
     await deploy("VRFCoordinatorV2Mock", {
       from: deployer,
       args: args,
+      log: true,
+    });
+
+    await deploy("MockV3Aggregator", {
+      from: deployer,
+      args: [DECIMALS, INITIAL_PRICE],
       log: true,
     });
 
