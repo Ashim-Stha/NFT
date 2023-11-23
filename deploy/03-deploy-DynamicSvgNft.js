@@ -23,6 +23,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   const lowSvg = fs.readFileSync("./images/dynamicNft/frown.svg", {
     encoding: "utf8",
   });
+
   const highSvg = fs.readFileSync("./images/dynamicNft/happy.svg", {
     encoding: "utf8",
   });
